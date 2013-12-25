@@ -113,6 +113,8 @@ typedef NS_ENUM(NSInteger, JNWCollectionViewScrollPosition) {
 @class JNWCollectionViewLayout;
 @interface JNWCollectionView : JNWScrollView
 
+@property (assign) BOOL stickyHeader;
+
 // The delegate for the collection view.
 @property (nonatomic, unsafe_unretained) id<JNWCollectionViewDelegate> delegate;
 

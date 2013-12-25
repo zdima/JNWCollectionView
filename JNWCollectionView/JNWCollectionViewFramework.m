@@ -700,7 +700,81 @@ static void JNWCollectionViewCommonInit(JNWCollectionView *collectionView) {
 			
 	// { "index/kind/identifier" : view }
 	NSArray *oldVisibleViewsIdentifiers = self.visibleSupplementaryViewsMap.allKeys;
-	NSArray *updatedVisibleViewsIdentifiers = [self layoutIdentifiersForSupplementaryViewsInRect:self.documentVisibleRect];	
+	NSArray *updatedVisibleViewsIdentifiers = [self layoutIdentifiersForSupplementaryViewsInRect:self.documentVisibleRect];
+
+    NSString* stickyLayoutIdentifier=nil;
+    if(_stickyHeader)
+    {
+        // top point of the visible frame
+        CGPoint topPoint = CGPointMake( 10, self.documentVisibleRect.origin.y );
+        // find what secton is shown on at a topPoint
+        NSInteger section = -1;
+        NSIndexPath* idxPath = [self indexPathForItemAtPoint:topPoint];
+        if(idxPath)
+            section = idxPath.jnw_section;
+        for( NSString* identifier in oldVisibleViewsIdentifiers)
+        {
+            NSInteger tsection = [self sectionForSupplementaryLayoutIdentifier:identifier];
+            JNWCollectionViewLayoutAttributes *attributes = [self.collectionViewLayout layoutAttributesForSupplementaryItemInSection:tsection kind:JNWCollectionViewListLayoutHeaderKind];
+            if(tsection==section || CGRectContainsPoint(attributes.frame, topPoint)) {
+                section = tsection;
+                stickyLayoutIdentifier = identifier;
+            }
+        }
+        if(section>=0 && !stickyLayoutIdentifier) {
+            // need find and add supplementary view stickyLayoutIdentifier
+            for (JNWCollectionViewSection *sectionInfo in self.data.sections) {
+                if(sectionInfo.index == section) {
+                    for (NSString *identifier in self.supplementaryViewClassMap.allKeys)
+                    {
+                        NSString *kind = [self kindForSupplementaryViewIdentifier:identifier];
+                        if([kind isEqualToString:JNWCollectionViewListLayoutHeaderKind]) {
+                            stickyLayoutIdentifier = [self layoutIdentifierForSupplementaryViewIdentifier:identifier inSection:section];
+                        }
+                    }
+                    break;
+                }
+            }
+            
+            NSString *identifier = [self supplementaryViewIdentifierForLayoutIdentifier:stickyLayoutIdentifier];
+            NSString *kind = [self kindForSupplementaryViewIdentifier:identifier];
+            
+            JNWCollectionViewReusableView *view = [self.dataSource collectionView:self viewForSupplementaryViewOfKind:kind inSection:section];
+            NSAssert([view isKindOfClass:JNWCollectionViewReusableView.class], @"view returned from %@ should be a subclass of %@",
+                     NSStringFromSelector(@selector(collectionView:viewForSupplementaryViewOfKind:inSection:)), NSStringFromClass(JNWCollectionViewReusableView.class));
+            
+            JNWCollectionViewLayoutAttributes *attributes = [self.collectionViewLayout layoutAttributesForSupplementaryItemInSection:section kind:kind];
+            view.frame = attributes.frame;
+            view.alphaValue = attributes.alpha;
+            [self.documentView addSubview:view];
+            
+            self.visibleSupplementaryViewsMap[stickyLayoutIdentifier] = view;
+            
+            if(![oldVisibleViewsIdentifiers containsObject:stickyLayoutIdentifier])
+                oldVisibleViewsIdentifiers = [oldVisibleViewsIdentifiers arrayByAddingObject:stickyLayoutIdentifier];
+        }
+        
+        if(section>=0 && stickyLayoutIdentifier)
+        {
+            if(![updatedVisibleViewsIdentifiers containsObject:stickyLayoutIdentifier])
+                updatedVisibleViewsIdentifiers = [updatedVisibleViewsIdentifiers arrayByAddingObject:stickyLayoutIdentifier];
+            
+            NSView* view = self.visibleSupplementaryViewsMap[stickyLayoutIdentifier];
+            JNWCollectionViewLayoutAttributes *attributes = [self.collectionViewLayout layoutAttributesForSupplementaryItemInSection:section kind:JNWCollectionViewListLayoutHeaderKind];
+            NSRect rect = attributes.frame;
+            rect.origin.y = self.documentVisibleRect.origin.y;
+            
+            // make sure next section will not overlap
+            // we need to move up if next section start overlapping
+            JNWCollectionViewLayoutAttributes *nextAttributes = [self.collectionViewLayout layoutAttributesForSupplementaryItemInSection:(section+1) kind:JNWCollectionViewListLayoutHeaderKind];
+            if(nextAttributes.frame.origin.y <= (rect.origin.y+rect.size.height+1) )
+                rect.origin.y = nextAttributes.frame.origin.y -rect.size.height-1;
+            
+            view.frame = rect;
+            view.alphaValue = attributes.alpha;
+            [view setNeedsLayout:YES];
+        }
+    }
 	
 	NSMutableArray *viewsToRemoveIdentifers = [NSMutableArray arrayWithArray:oldVisibleViewsIdentifiers];
 	[viewsToRemoveIdentifers removeObjectsInArray:updatedVisibleViewsIdentifiers];
@@ -734,6 +808,24 @@ static void JNWCollectionViewCommonInit(JNWCollectionView *collectionView) {
 		[self.documentView addSubview:view];
 		
 		self.visibleSupplementaryViewsMap[layoutIdentifier] = view;
+	}
+
+    // refresh possition
+	for (NSString *layoutIdentifier in updatedVisibleViewsIdentifiers) {
+        if(stickyLayoutIdentifier && [layoutIdentifier isEqualToString:stickyLayoutIdentifier])
+            continue;
+		NSInteger section = [self sectionForSupplementaryLayoutIdentifier:layoutIdentifier];
+		NSString *identifier = [self supplementaryViewIdentifierForLayoutIdentifier:layoutIdentifier];
+		NSString *kind = [self kindForSupplementaryViewIdentifier:identifier];
+
+		JNWCollectionViewReusableView *view = self.visibleSupplementaryViewsMap[layoutIdentifier];
+		NSAssert([view isKindOfClass:JNWCollectionViewReusableView.class], @"view returned from %@ should be a subclass of %@",
+				 NSStringFromSelector(@selector(collectionView:viewForSupplementaryViewOfKind:inSection:)), NSStringFromClass(JNWCollectionViewReusableView.class));
+		
+		JNWCollectionViewLayoutAttributes *attributes = [self.collectionViewLayout layoutAttributesForSupplementaryItemInSection:section kind:kind];
+		view.frame = attributes.frame;
+		view.alphaValue = attributes.alpha;
+		[self.documentView addSubview:view];
 	}
 }
 
