@@ -174,7 +174,7 @@ NSString * const JNWCollectionViewListLayoutFooterKind = @"JNWCollectionViewList
 	NSMutableArray *indexPaths = [NSMutableArray array];
 	
 	for (JNWCollectionViewListLayoutSection *section in self.sections) {
-		if (CGRectIntersectsRect(section.frame, rect)) {
+		if (CGRectIntersectsRect(section.frame, rect) && section.numberOfRows>0) {
 			
 			// Since this is a linear set of data, we run a binary search for optimization
 			// purposes, finding the rects of the upper and lower bound.
