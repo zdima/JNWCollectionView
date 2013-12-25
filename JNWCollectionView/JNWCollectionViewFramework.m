@@ -208,8 +208,14 @@ static void JNWCollectionViewCommonInit(JNWCollectionView *collectionView) {
 		if (cellClass == nil) {
 			cellClass = JNWCollectionViewCell.class;
 		}
-		
-		cell = [[cellClass alloc] initWithFrame:CGRectZero];
+        NSString* className = NSStringFromClass( cellClass );
+        if([[NSBundle mainBundle] pathForResource:className ofType:@"nib"] != nil)
+        {
+            NSViewController* ctrl = [[NSViewController alloc] initWithNibName:className bundle:nil];
+            cell = (JNWCollectionViewCell*)ctrl.view;
+        } else {
+            cell = [[cellClass alloc] initWithFrame:CGRectZero];
+        }
 	}
 	
 	cell.reuseIdentifier = identifier;
@@ -228,10 +234,17 @@ static void JNWCollectionViewCommonInit(JNWCollectionView *collectionView) {
 		Class viewClass = self.supplementaryViewClassMap[identifier];
 		
 		if (viewClass == nil) {
-			viewClass = JNWCollectionViewReusableView.class;
+            viewClass = JNWCollectionViewReusableView.class;
 		}
 		
-		view = [[viewClass alloc] initWithFrame:CGRectZero];
+        NSString* className = NSStringFromClass( viewClass );
+        if([[NSBundle mainBundle] pathForResource:className ofType:@"nib"] != nil)
+        {
+            NSViewController* ctrl = [[NSViewController alloc] initWithNibName:className bundle:nil];
+            view = (JNWCollectionViewReusableView*)ctrl.view;
+        } else {
+            view = [[viewClass alloc] initWithFrame:CGRectZero];
+        }
 	}
 	
 	view.reuseIdentifier = reuseIdentifier;
