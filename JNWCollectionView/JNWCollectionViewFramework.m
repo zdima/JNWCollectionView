@@ -52,6 +52,7 @@ typedef NS_ENUM(NSInteger, JNWCollectionViewSelectionType) {
 	} _collectionViewFlags;
 	
 	CGRect _lastDrawnBounds;
+    NSView* _localStorageForDocumentView;
 }
 
 // Layout data/cache
@@ -91,7 +92,7 @@ static void JNWCollectionViewCommonInit(JNWCollectionView *collectionView) {
 	collectionView.wantsLayer = YES;
 	
 	// Set the document view to a custom class that returns YES to -isFlipped.
-	collectionView.documentView = [[JNWCollectionViewDocumentView alloc] initWithFrame:CGRectZero];
+    [collectionView setNewDocumentView:[[JNWCollectionViewDocumentView alloc] initWithFrame:CGRectZero]];
 
 	collectionView.hasHorizontalScroller = NO;
 	collectionView.hasVerticalScroller = YES;
@@ -102,6 +103,12 @@ static void JNWCollectionViewCommonInit(JNWCollectionView *collectionView) {
 	collectionView.allowsSelection = YES;
 	
 	collectionView.backgroundColor = NSColor.clearColor;
+}
+
+-(void)setNewDocumentView:(NSView*)newView
+{
+    self.documentView = newView;
+    _localStorageForDocumentView = newView;
 }
 
 - (id)initWithFrame:(NSRect)frameRect {
