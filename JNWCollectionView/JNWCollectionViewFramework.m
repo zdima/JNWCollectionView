@@ -563,7 +563,7 @@ static void JNWCollectionViewCommonInit(JNWCollectionView *collectionView) {
 }
 
 - (CGSize)visibleSize {
-	return self.documentVisibleRect.size;
+    return self.documentVisibleRect.size;
 }
 
 - (void)layoutCells {
@@ -773,9 +773,11 @@ static void JNWCollectionViewCommonInit(JNWCollectionView *collectionView) {
             
             // make sure next section will not overlap
             // we need to move up if next section start overlapping
-            JNWCollectionViewLayoutAttributes *nextAttributes = [self.collectionViewLayout layoutAttributesForSupplementaryItemInSection:(section+1) kind:JNWCollectionViewListLayoutHeaderKind];
-            if(nextAttributes.frame.origin.y <= (rect.origin.y+rect.size.height+1) )
-                rect.origin.y = nextAttributes.frame.origin.y -rect.size.height-1;
+            if(section<self.data.sections.count-1) {
+                JNWCollectionViewLayoutAttributes *nextAttributes = [self.collectionViewLayout layoutAttributesForSupplementaryItemInSection:(section+1) kind:JNWCollectionViewListLayoutHeaderKind];
+                if(nextAttributes.frame.origin.y <= (rect.origin.y+rect.size.height+1) )
+                    rect.origin.y = nextAttributes.frame.origin.y -rect.size.height-1;
+            }
             
             view.frame = rect;
             view.alphaValue = attributes.alpha;
