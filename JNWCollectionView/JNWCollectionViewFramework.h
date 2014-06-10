@@ -115,6 +115,9 @@ typedef NS_ENUM(NSInteger, JNWCollectionViewScrollPosition) {
 
 @property (assign) BOOL stickyHeader;
 
+@property (assign) BOOL disableHorizontalScroll;
+@property (assign) BOOL disableVerticalScroll;
+
 // The delegate for the collection view.
 @property (nonatomic, unsafe_unretained) id<JNWCollectionViewDelegate> delegate;
 

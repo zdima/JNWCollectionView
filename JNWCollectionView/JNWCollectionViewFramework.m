@@ -1088,6 +1088,24 @@ static void JNWCollectionViewCommonInit(JNWCollectionView *collectionView) {
 	[self selectAll:nil];
 }
 
+-(void)scrollWheel:(NSEvent *)theEvent {
+    [super scrollWheel:theEvent];
+    if(_disableHorizontalScroll) {
+        NSRect modifiedRect = self.contentView.bounds;
+        if(modifiedRect.origin.x!=0) {
+            modifiedRect.origin.x = 0;
+            self.contentView.bounds = modifiedRect;
+        }
+    }
+    if(_disableVerticalScroll) {
+        NSRect modifiedRect = self.contentView.bounds;
+        if(modifiedRect.origin.y!=0) {
+            modifiedRect.origin.y = 0;
+            self.contentView.bounds = modifiedRect;
+        }
+    }
+}
+
 #pragma mark NSObject
 
 - (NSString *)description {
